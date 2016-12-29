@@ -10,6 +10,7 @@ require 'ttime/logging'
 
 module TTime
   class NoSuchCourse < Exception; end
+  class BadRepy < Exception; end
 
   class Data
     attr_reader :data
@@ -103,9 +104,10 @@ module TTime
     DATA_DIR = Pathname.new(ENV['HOME']) + ".ttime/data"
 
     REPY_Zip_filename = "REPFILE.zip"
+    REPY_filename = "REPY"
     REPY_Zip = DATA_DIR + REPY_Zip_filename
-    REPY_File = DATA_DIR + "REPY"
-    REPY_URI = "http://ug.technion.ac.il/rep/REPFILE.zip"
+    REPY_File = DATA_DIR + REPY_filename
+    REPY_URI = "http://ug3.technion.ac.il/rep/REPFILE.zip"
     YAML_File = DATA_DIR + "technion.yml"
     MARSHAL_File = DATA_DIR + "technion.mrshl"
     UDonkey_XML_File = DATA_DIR + "MainDB.xml"
@@ -134,10 +136,14 @@ module TTime
 
           report _("Extracting REPY file"), 0.5
 
-          require 'zip/zip'
+          require 'zip'
 
-          Zip::ZipInputStream.open(tf.path) do |zis|
-              entry = zis.get_next_entry
+          Zip::InputStream.open(tf.path) do |zis|
+              loop do
+                  entry = zis.get_next_entry
+                  break if entry.name == REPY_filename
+                  raise BadRepy, "Couldn't find REPY in zipfile" if zis.eof
+              end  
               open(REPY_File, "w") do |dest_file|
                   dest_file.write zis.read
               end
