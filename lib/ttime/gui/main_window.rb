@@ -47,7 +47,7 @@ module TTime
 
     DefaultEventDataMembers = [ :course_name, :group_number, :place ]
 
-    AvailableCoursesColumns = [ 
+    AvailableCoursesColumns = [
       [:name, String],
       [:number, String],
       [:course, Logic::Course],
@@ -316,7 +316,7 @@ module TTime
       def on_available_course_selection
         course = currently_addable_course
 
-        @ui["btn_add_course"].sensitive = 
+        @ui["btn_add_course"].sensitive =
           course ? true : false
 
         set_course_info course
@@ -590,6 +590,12 @@ module TTime
               group = params[:data][:event].group
               show_alternatives_for course, group.type
             end
+            menu.add_with_callback _("Turn off this event (turn back on in group constraints)") do
+              course = params[:data][:event].course
+              group = params[:data][:event].group
+
+              add_group_constraint_for course, group
+            end
             menu.add_with_callback _("Cancel this course") do
               course = params[:data][:event].course
               if drop_course(course)
@@ -635,6 +641,13 @@ module TTime
         @calendar.redraw
       end
 
+      def add_group_constraint_for course, group
+        c = @constraints.find { |c| c.class.settings_name == :group_constraints }
+        c.disallow_group(course.number, group.number)
+
+        find_schedules
+      end
+
       # Update @calendar_info to display info about the given event
       def set_calendar_info(event = nil, schedule = nil)
         buffer = @calendar_info.buffer
@@ -670,7 +683,7 @@ module TTime
       end
 
       def add_detail_to_buffer(buffer, iter, title, detail)
-	    return if detail.nil? or detail == ""
+        return if detail.nil? or detail == ""
         tag = buffer.create_tag(nil, {
           :weight => Pango::FontDescription::WEIGHT_BOLD
         })
@@ -704,7 +717,7 @@ module TTime
 
         Gtk.queue do
           @calendar.redraw
-	  set_calendar_info nil, schedule
+          set_calendar_info nil, schedule
         end
       end
 
@@ -1048,7 +1061,7 @@ module TTime
         constraints_notebook.border_width = 5
 
         notebook = @ui["notebook"]
-        notebook.append_page constraints_notebook, 
+        notebook.append_page constraints_notebook,
           Gtk::Label.new(_("Constraints"))
         notebook.show_all
       end
@@ -1084,7 +1097,7 @@ module TTime
         ratings_notebook.border_width = 5
 
         notebook = @ui["notebook"]
-        notebook.append_page ratings_notebook, 
+        notebook.append_page ratings_notebook,
           Gtk::Label.new(_("Schedule ratings"))
         notebook.show_all
       end
